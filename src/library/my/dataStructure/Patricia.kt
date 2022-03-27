@@ -67,12 +67,12 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                             val (prefix, left, right) = node
                             val mask = -(prefix and -prefix)
                             when(newValue and mask) {
-                                left.prefix and prefix -> { // newValue が left の子である
+                                left.prefix and mask -> { // newValue が left の子である
                                     val newLeft = insert(left, newValue)
                                     if (newLeft === left) node          // 変更がない場合
                                     else Branch(prefix, newLeft, right) // 変更があった場合、新しいノードを作る
                                 }
-                                right.prefix and prefix -> {// newValue が right の子である
+                                right.prefix and mask -> {// newValue が right の子である
                                     val newRight = insert(right, newValue)
                                     if (newRight === right) node        // 変更がない場合
                                     else Branch(prefix, left, newRight) // 変更があった場合、新しいノードを作る
@@ -98,12 +98,12 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                             val (prefix, left, right) = node
                             val mask = -(prefix and -prefix)
                             when (value and mask) {
-                                left.prefix and prefix -> {     // newValue が左の子に属する
+                                left.prefix and mask -> {     // newValue が左の子に属する
                                     val newLeft = erase(left, value) ?: return right
                                     if (newLeft === left) node
                                     else Node(newLeft, right)
                                 }
-                                right.prefix and prefix -> {    // newValue が右の子に属する
+                                right.prefix and mask -> {    // newValue が右の子に属する
                                     val newRight = erase(right, value) ?: return left
                                     if (newRight === right) node
                                     else Node(left, newRight)
@@ -135,8 +135,8 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                             val (prefix, left, right) = node
                             val mask = -(prefix and -prefix)
                             when (value and mask) {
-                                left.prefix and prefix -> search(left, value)
-                                right.prefix and prefix -> search(right, value)
+                                left.prefix and mask -> search(left, value)
+                                right.prefix and mask -> search(right, value)
                                 else -> false
                             }
                         }
@@ -147,11 +147,15 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                     return when(node) {
                         is Branch -> {
                             val (prefix, left, right) = node
-                            val mask = -(prefix and -prefix) shl 1
-                            if ((prefix and mask) < (value and mask)) null
-                            else if ((value and mask) < (prefix and mask)) minValue(left)
-                            else if ((value and prefix) == (right.prefix and prefix)) greaterThanOrEqual(right, value)
-                            else greaterThanOrEqual(left, value) ?: minValue(right)
+                            val mask = -(prefix and -prefix)
+                            when (value and mask) {
+                                left.prefix and mask -> greaterThanOrEqual(left, value) ?: minValue(right)
+                                right.prefix and mask -> greaterThanOrEqual(right, value)
+                                else -> {
+                                    if (prefix < value) null
+                                    else minValue(left)
+                                }
+                            }
                         }
                         is Leaf -> {
                             if (value <= node.prefix) node.prefix
@@ -163,11 +167,15 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                     return when(node) {
                         is Branch -> {
                             val (prefix, left, right) = node
-                            val mask = -(prefix and -prefix) shl 1
-                            if ((prefix and mask) < (value and mask)) null
-                            else if ((value and mask) < (prefix and mask)) minValue(left)
-                            else if ((value and prefix) == (right.prefix and prefix)) greaterThan(right, value)
-                            else greaterThan(left, value) ?: minValue(right)
+                            val mask = -(prefix and -prefix)
+                            when (value and mask) {
+                                left.prefix and mask -> greaterThan(left, value) ?: minValue(right)
+                                right.prefix and mask -> greaterThan(right, value)
+                                else -> {
+                                    if (prefix < value) null
+                                    else minValue(left)
+                                }
+                            }
                         }
                         is Leaf -> {
                             if (value < node.prefix) node.prefix
@@ -179,11 +187,15 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                     return when(node) {
                         is Branch -> {
                             val (prefix, left, right) = node
-                            val mask = -(prefix and -prefix) shl 1
-                            if ((value and mask) < (prefix and mask)) null
-                            else if ((prefix and mask) < (value and mask)) maxValue(right)
-                            else if ((value and prefix) == (left.prefix and prefix)) lessThanOrEqual(left, value)
-                            else lessThanOrEqual(right, value) ?: maxValue(left)
+                            val mask = -(prefix and -prefix)
+                            when(value and mask) {
+                                left.prefix and mask -> lessThanOrEqual(left, value)
+                                right.prefix and mask -> lessThanOrEqual(right, value) ?: maxValue(left)
+                                else -> {
+                                    if (prefix < value) maxValue(right)
+                                    else null
+                                }
+                            }
                         }
                         is Leaf -> {
                             if (node.prefix <= value) node.prefix
@@ -195,11 +207,15 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                     return when(node) {
                         is Branch -> {
                             val (prefix, left, right) = node
-                            val mask = -(prefix and -prefix) shl 1
-                            if ((value and mask) < (prefix and mask)) null
-                            else if ((prefix and mask) < (value and mask)) maxValue(right)
-                            else if ((value and prefix) == (left.prefix and prefix)) lessThan(left, value)
-                            else lessThan(right, value) ?: maxValue(left)
+                            val mask = -(prefix and -prefix)
+                            when(value and mask) {
+                                left.prefix and mask -> lessThan(left, value)
+                                right.prefix and mask -> lessThan(right, value) ?: maxValue(left)
+                                else -> {
+                                    if (prefix < value) maxValue(right)
+                                    else null
+                                }
+                            }
                         }
                         is Leaf -> {
                             if (node.prefix < value) node.prefix
