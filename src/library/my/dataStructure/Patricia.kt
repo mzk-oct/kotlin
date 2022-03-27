@@ -16,32 +16,28 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
     }
     companion object {
         private class NodeIterator(node: Node): Iterator<Int> {
-            private val stack = Array(32){node}
-            private var index = 0
+            private val stack = mutableListOf(node)
             init {
                 untilLeaf()
             }
-            private fun untilLeaf(): Unit {
-                if (index >= 0) {
-                    when(val node = stack[index]) {
-                        is Branch -> {
-                            stack[index] = node.right
-                            stack[index + 1] = node.left
-                            index += 1
-                            untilLeaf()
-                        }
-                        else -> {}
+            private fun untilLeaf() {
+                when(val node = stack.removeLastOrNull()) {
+                    is Branch -> {
+                        stack.add(node.right)
+                        stack.add(node.left)
+                        untilLeaf()
                     }
+                    is Leaf -> stack.add(node)
+                    else -> {}
                 }
             }
             override fun hasNext(): Boolean {
-                return index >= 0
+                return stack.isNotEmpty()
             }
             override fun next(): Int {
-                val current = stack[index].prefix
-                index -= 1
+                val current = stack.removeLastOrNull() ?: throw NoSuchElementException()
                 untilLeaf()
-                return current
+                return current.prefix
             }
         }
         private sealed interface Node: Iterable<Int> {
@@ -69,26 +65,30 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                     return when(node) {
                         is Branch -> {
                             val (prefix, left, right) = node
-                            val mask = -(prefix and -prefix) shl 1
-                            if ((prefix and mask) != (newValue and mask)) {
-                                if (prefix < newValue) Node(node, Leaf(newValue))
-                                else Node(Leaf(newValue), node)
-                            }else {
-                                if ((newValue and prefix) == (left.prefix and prefix)) {
+                            val mask = -(prefix and -prefix)
+                            when(newValue and mask) {
+                                left.prefix and prefix -> { // newValue が left の子である
                                     val newLeft = insert(left, newValue)
-                                    if (newLeft === left) node
-                                    else Branch(prefix, newLeft, right)
-                                }else {
+                                    if (newLeft === left) node          // 変更がない場合
+                                    else Branch(prefix, newLeft, right) // 変更があった場合、新しいノードを作る
+                                }
+                                right.prefix and prefix -> {// newValue が right の子である
                                     val newRight = insert(right, newValue)
-                                    if (newRight === right) node
-                                    else Branch(prefix, left, newRight)
+                                    if (newRight === right) node        // 変更がない場合
+                                    else Branch(prefix, left, newRight) // 変更があった場合、新しいノードを作る
+                                }
+                                else -> {                   // newValue が node の子でない
+                                    if (newValue < prefix)  Node(Leaf(newValue), node)  // 左の子である
+                                    else Node(node, Leaf(newValue))                     // 右の子である
                                 }
                             }
                         }
                         is Leaf -> {
-                            if (node.prefix == newValue) node
-                            else if (node.prefix < newValue) Node(node, Leaf(newValue))
-                            else Node(Leaf(newValue), node)
+                            when {
+                                node.prefix < newValue -> Node(node, Leaf(newValue)) // newValue が右の子である
+                                node.prefix > newValue -> Node(Leaf(newValue), node) // newValue が左の子である
+                                else -> node                                         // newValue が既に存在する
+                            }
                         }
                     }
                 }
@@ -96,16 +96,19 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                     return when(node) {
                         is Branch -> {
                             val (prefix, left, right) = node
-                            val mask = -(prefix and -prefix) shl 1
-                            if ((prefix and mask) != (value and mask)) node
-                            else if ((value and prefix) == (left.prefix and prefix)) {
-                                val newLeft = erase(left, value) ?: return right
-                                if (newLeft === left) node
-                                else Node(newLeft, right)
-                            }else {
-                                val newRight = erase(right, value) ?: return left
-                                if (newRight === right) node
-                                else Node(left, newRight)
+                            val mask = -(prefix and -prefix)
+                            when (value and mask) {
+                                left.prefix and prefix -> {     // newValue が左の子に属する
+                                    val newLeft = erase(left, value) ?: return right
+                                    if (newLeft === left) node
+                                    else Node(newLeft, right)
+                                }
+                                right.prefix and prefix -> {    // newValue が右の子に属する
+                                    val newRight = erase(right, value) ?: return left
+                                    if (newRight === right) node
+                                    else Node(left, newRight)
+                                }
+                                else -> node                    // newValue が node に属さない
                             }
                         }
                         is Leaf -> {
@@ -130,10 +133,12 @@ class Patricia private constructor(private val node: Node?, val size: Int): Iter
                     return when(node) {
                         is Branch -> {
                             val (prefix, left, right) = node
-                            val mask = -(prefix and -prefix) shl 1
-                            if ((prefix and mask) != (value and mask)) false
-                            else if ((value and prefix) == (left.prefix and prefix)) search(left, value)
-                            else search(right, value)
+                            val mask = -(prefix and -prefix)
+                            when (value and mask) {
+                                left.prefix and prefix -> search(left, value)
+                                right.prefix and prefix -> search(right, value)
+                                else -> false
+                            }
                         }
                         is Leaf -> value == node.prefix
                     }
