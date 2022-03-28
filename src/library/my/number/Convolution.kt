@@ -1,8 +1,6 @@
-package library
+package library.my.number
 
-import java.lang.IllegalStateException
-
-class OddPrimeConvolution(private val mod: Long) {
+class Convolution(private val mod: Long) {
     private val r2: Long = R * R % mod
     private val invMod: Long = invPair(R, mod).second
     private val sumE: LongArray = LongArray(30)
@@ -156,7 +154,7 @@ class OddPrimeConvolution(private val mod: Long) {
             }
         }
     }
-    fun convolution(a: LongArray, b: LongArray): LongArray {
+    fun convolution(a: IntArray, b: IntArray): LongArray {
         val n = a.size
         val m = b.size
         if (n == 0 || m == 0) return LongArray(0)
@@ -182,7 +180,7 @@ class OddPrimeConvolution(private val mod: Long) {
         }
         return result
     }
-    fun convolution(a: IntArray, b: IntArray): LongArray {
+    fun convolution(a: LongArray, b: LongArray): LongArray {
         val n = a.size
         val m = b.size
         if (n == 0 || m == 0) return LongArray(0)

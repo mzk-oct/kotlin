@@ -1,4 +1,4 @@
-package library.my
+package library.my.number
 
 object NextPermutation {
     fun IntArray.nextPermutation(): Boolean {

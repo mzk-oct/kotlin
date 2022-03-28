@@ -1,22 +1,21 @@
-package library.my
+package library.my.dataStructure
 
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.random.Random
 import kotlin.streams.asStream
 
-internal class LazyAddMinSegTest {
+
+internal class LazyAddMaxSegTest {
     class Oracle private constructor(val size: Int, private val vec: LongArray) {
         constructor(size: Int, default: Long): this(size, LongArray(size){default})
         constructor(size: Int): this(size, 0L)
-        fun getMin(from: Int, until: Int): Long{
-            return (from until until).minOf(vec::get)
-        }
-        fun getValue(position: Int): Long {
-            return vec[position]
+        fun get(from: Int, until: Int): Long{
+            return (from until until).maxOf(vec::get)
         }
         fun set(position: Int, value: Long) {
             vec[position] = value
@@ -29,16 +28,15 @@ internal class LazyAddMinSegTest {
     }
     @ParameterizedTest
     @MethodSource
-    fun propertyTest(seed: Int, target: library.my.LazyAddMinSeg, oracle: Oracle) {
+    fun propertyTest(seed: Int, target: LazyAddMaxSeg, oracle: Oracle) {
         val rand = Random(seed)
         val valueMax = 10000L
         repeat(3000){
             val op = rand.nextInt(5)
-            //TODO(GET)
             if (op == 0) {// GET
                 val from = rand.nextInt(target.size)
                 val until = rand.nextInt(from, target.size) + 1
-                assertEquals(target.getMin(from, until), oracle.getMin(from, until))
+                assertEquals(target.get(from, until), oracle.get(from, until))
             }else if (op <= 3) {
                 val position = rand.nextInt(target.size)
                 val value = rand.nextLong(valueMax) - valueMax / 2
@@ -59,13 +57,13 @@ internal class LazyAddMinSegTest {
             val rand = Random(0)
             val maxSize = 1000
             return sequence {
-                repeat(5000){
+                repeat(3000){
                     val seed = rand.nextInt()
                     val size = rand.nextInt(1, maxSize)
-                    val default = rand.nextLong(0L, 1000000000L)
-                    val target = library.my.LazyAddMinSeg(size, default)
+                    val default = rand.nextLong(-10000L, 0L)
+                    val target = LazyAddMaxSeg(size, default)
                     val oracle = Oracle(size, default)
-                    yield(Arguments.arguments(seed, target, oracle))
+                    yield(arguments(seed, target, oracle))
                 }
             }.asStream()
         }

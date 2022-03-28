@@ -1,4 +1,4 @@
-package library.my
+package library.my.dataStructure
 
 data class Range(val white: Int, val black: Int) {
     fun flip(): Range = Range(black, white)

@@ -1,5 +1,6 @@
-package library.my
+package library.my.number
 
+import library.my.number.ConvolutionConst
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource

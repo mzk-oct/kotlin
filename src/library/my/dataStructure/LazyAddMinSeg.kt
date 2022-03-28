@@ -1,4 +1,4 @@
-package library.my
+package library.my.dataStructure
 
 class LazyAddMinSeg private constructor(val size: Int, private val vec: LongArray) {
     private val half: Int = vec.size shr 1

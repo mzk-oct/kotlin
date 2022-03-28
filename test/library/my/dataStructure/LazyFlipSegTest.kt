@@ -1,4 +1,4 @@
-package library.my
+package library.my.dataStructure
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -10,7 +10,7 @@ import kotlin.test.assertEquals
 
 internal class LazyFlipSegTest {
     class Oracle private constructor(val size: Int, private val vec: Array<Range>) {
-        constructor(size: Int): this(size, Array(size){Range(1, 0)})
+        constructor(size: Int): this(size, Array(size){ Range(1, 0) })
         constructor(initial: Array<Range>): this(initial.size, initial.clone())
         fun get(from: Int, until: Int): Range {
             return (from until until).map(vec::get).fold(Range(0, 0), Range::plus)
@@ -56,7 +56,7 @@ internal class LazyFlipSegTest {
                     val r = Random(s)
                     val seed = r.nextInt()
                     val size = r.nextInt(1, maxSize)
-                    val init = Array(size){Range(r.nextInt(50), r.nextInt(50))}
+                    val init = Array(size){ Range(r.nextInt(50), r.nextInt(50)) }
                     val target = LazyFlipSeg(init)
                     val oracle = Oracle(init)
                     yield(Arguments.arguments(seed, target, oracle))

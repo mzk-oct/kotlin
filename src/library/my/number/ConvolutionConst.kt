@@ -1,47 +1,33 @@
-package library.my
+package library.my.number
 
-class Convolution(private val mod: Long) {
-    private val r2: Long = R * R % mod
-    private val invMod: Long = invPair(R, mod).second
+class ConvolutionConst() {
     private val sumE: LongArray = LongArray(30)
     private val sumIE: LongArray = LongArray(30)
     init {
         val es = LongArray(30)
         val ies = LongArray(30)
-        val cnt = Integer.numberOfTrailingZeros(mod.toInt() - 1)
-        val root = primitiveRoot(mod)
-        val base = powMod(root, (mod - 1) shr cnt, mod)
-        var e = reduce(r2 * base)
-        var ie = reduce(r2 * inv(base, mod))
+        val cnt = Integer.numberOfTrailingZeros(MOD - 1)
+        val root = primitiveRoot(MOD.toLong())
+        val base = powMod(root, (MOD - 1L) shr cnt)
+        var e = base
+        var ie = inv(base, MOD.toLong())
         for (i in (2 .. cnt).reversed()) {
             es[i - 2] = e
             ies[i - 2] = ie
-            e = reduce(e * e)
-            ie = reduce(ie * ie)
+            e = e * e % MOD
+            ie = ie * ie % MOD
         }
-        e = R
-        ie = R
+        e = 1
+        ie = 1
         for (i in 0 until cnt - 2){
-            sumE[i] = reduce(es[i] * e)
-            e = reduce(e * ies[i])
-            sumIE[i] = reduce(ies[i] * ie)
-            ie = reduce(ie * es[i])
+            sumE[i] = es[i] * e % MOD
+            e = e * ies[i] % MOD
+            sumIE[i] = ies[i] * ie % MOD
+            ie = ie * es[i] % MOD
         }
-    }
-    private inline fun reduce(a: Long): Long {
-        val a = ((((((a and Mask) * invMod) and Mask) * mod + a) shr Shift))
-        return if (a < mod) a else a - mod
-    }
-    private inline fun modMinus(a: Long): Long {
-        return if (0 <= a) a else a + mod
-    }
-    private inline fun modPlus(a: Long): Long {
-        return if (a < mod) a else a - mod
     }
     companion object {
-        const val Shift = 31
-        const val R = 1L shl Shift
-        const val Mask = R - 1
+        const val MOD = 998244353
         fun primitiveRoot(mod: Long): Long {
             if (mod == 998244353L) return 3
             if (mod == 167772161L) return 3
@@ -69,7 +55,7 @@ class Convolution(private val mod: Long) {
             while (true) {
                 var ok = true
                 for (i in 0 until cnt) {
-                    if (powMod(g, (mod - 1) / divs[i], mod) == 1L) {
+                    if (powMod(g, (MOD - 1L) / divs[i]) == 1L) {
                         ok = false
                         break
                     }
@@ -78,13 +64,13 @@ class Convolution(private val mod: Long) {
                 ++g
             }
         }
-        fun powMod(base: Long, exp: Long, mod: Long): Long {
+        fun powMod(base: Long, exp: Long): Long {
             var result = 1L
             var b = base
             var e = exp
             while (e > 0) {
-                if ((e and 1) == 1L) result = result * b % mod
-                b = b * b % mod
+                if ((e and 1) == 1L) result = result * b % MOD
+                b = b * b % MOD
                 e = e shr 1
             }
             return result
@@ -121,16 +107,16 @@ class Convolution(private val mod: Long) {
         for (ph in 1..h) {
             val w = 1 shl (ph - 1)
             val p = 1 shl (h - ph)
-            var now = reduce(r2)
+            var now = 1L
             for (s in 0 until w) {
                 val offset = s shl (h - ph + 1)
                 for (i in 0 until p) {
                     val left = a[i + offset]
-                    val right = reduce(a[i + offset + p] * now)
-                    a[i + offset] = modPlus(left + right)
-                    a[i + offset + p] = modMinus(left - right)
+                    val right = a[i + offset + p] * now % MOD
+                    a[i + offset] = (left + right) % MOD
+                    a[i + offset + p] = (left - right + MOD) % MOD
                 }
-                now = reduce(now * se[Integer.numberOfTrailingZeros(s.inv())])
+                now = now * se[Integer.numberOfTrailingZeros(s.inv())] % MOD
             }
         }
     }
@@ -141,16 +127,16 @@ class Convolution(private val mod: Long) {
         for (ph in (1 .. h).reversed()) {
             val w = 1 shl (ph - 1)
             val p = 1 shl (h - ph)
-            var now = reduce(r2)
+            var now = 1L
             for (s in 0 until w) {
                 val offset = s shl (h - ph + 1)
                 for (i in 0 until p) {
                     val left = a[i + offset]
                     val right = a[i + offset + p]
-                    a[i + offset] = modPlus(left + right)
-                    a[i + offset + p] = reduce(now * (left - right + mod))
+                    a[i + offset] = (left + right) % MOD
+                    a[i + offset + p] = now * (left - right + MOD) % MOD
                 }
-                now = reduce(now * sie[Integer.numberOfTrailingZeros(s.inv())])
+                now = now * sie[Integer.numberOfTrailingZeros(s.inv())] % MOD
             }
         }
     }
@@ -162,21 +148,21 @@ class Convolution(private val mod: Long) {
         val ra = LongArray(z)
         val rb = LongArray(z)
         for (i in 0 until n) {
-            ra[i] = reduce(r2 * a[i])
+            ra[i] = a[i].toLong()
         }
         for (i in 0 until m) {
-            rb[i] = reduce(r2 * b[i])
+            rb[i] = b[i].toLong()
         }
         butterfly(ra)
         butterfly(rb)
         for (i in 0 until z) {
-            ra[i] = reduce(ra[i] * rb[i])
+            ra[i] = ra[i] * rb[i] % MOD
         }
         butterflyInv(ra)
         val result = ra.copyOf(n + m - 1)
-        val invZ = reduce(r2 * inv(z.toLong(), mod))
+        val invZ = inv(z.toLong(), MOD.toLong())
         for (i in result.indices) {
-            result[i] = reduce(reduce(result[i] * invZ))
+            result[i] = result[i] * invZ % MOD
         }
         return result
     }
@@ -185,24 +171,18 @@ class Convolution(private val mod: Long) {
         val m = b.size
         if (n == 0 || m == 0) return LongArray(0)
         val z = 1 shl ceilPow2(n + m - 1)
-        val ra = LongArray(z)
-        val rb = LongArray(z)
-        for (i in 0 until n) {
-            ra[i] = reduce(r2 * a[i])
-        }
-        for (i in 0 until m) {
-            rb[i] = reduce(r2 * b[i])
-        }
+        val ra = LongArray(z).also { a.copyInto(it) }
+        val rb = LongArray(z).also { b.copyInto(it) }
         butterfly(ra)
         butterfly(rb)
         for (i in 0 until z) {
-            ra[i] = reduce(ra[i] * rb[i])
+            ra[i] = ra[i] * rb[i] % MOD
         }
         butterflyInv(ra)
         val result = ra.copyOf(n + m - 1)
-        val invZ = reduce(r2 * inv(z.toLong(), mod))
+        val invZ = inv(z.toLong(), MOD.toLong())
         for (i in result.indices) {
-            result[i] = reduce(reduce(result[i] * invZ))
+            result[i] = result[i] * invZ % MOD
         }
         return result
     }

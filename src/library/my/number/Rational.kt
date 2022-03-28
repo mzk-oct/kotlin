@@ -1,4 +1,4 @@
-package library.my
+package library.my.number
 
 import kotlin.math.absoluteValue
 import kotlin.math.sign

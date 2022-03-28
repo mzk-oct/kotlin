@@ -1,4 +1,4 @@
-package library.my
+package library.my.number
 
 
 class ConvolutionRaw(val mod: Int) {

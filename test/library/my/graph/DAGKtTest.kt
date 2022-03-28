@@ -1,4 +1,4 @@
-package library.my
+package library.my.graph
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource

@@ -1,4 +1,4 @@
-package library.my
+package library.my.dataStructure
 
 class LazyMinMinSeg private constructor(val size: Int, private val log: Int, private val vec: LongArray, private val lazy: LongArray) {
     private fun _applyLazy(position: Int) {
