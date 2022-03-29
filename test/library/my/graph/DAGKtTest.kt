@@ -35,7 +35,9 @@ internal class DAGKtTest {
     fun test(graph: List<List<Int>>) {
         val actual = dag(graph)
         val expected = DAG.dag(graph.size, graph)
+        val actual2 = SCC.scc(graph)
         assert(verify(actual, expected))
+        assert(verify(actual2, expected))
     }
     companion object {
         const val SEED = 2
