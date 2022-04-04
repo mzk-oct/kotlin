@@ -1,2 +1,4 @@
 # プロジェクトの除外パス
 /out/
+/src/main.kt
+/src/temp.kt
