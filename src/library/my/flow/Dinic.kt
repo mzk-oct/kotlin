@@ -48,7 +48,7 @@ class Dinic(val size: Int, val start: Int, val goal: Int) {
                     --end
                 }
             }
-            if (0 == end) break
+            if (end-- == 0) break
             var minFlow = FlowType.MAX_VALUE
             for (idx in 0 until end) {
                 val i = deque[idx]
@@ -143,5 +143,83 @@ object DinicMatrix {
             }
         }
         return result to flow
+    }
+}
+class DinicBoolean(val size: Int, val start: Int, val goal: Int) {
+    class Edge(val to: Int, val pair: Int, var capacity: Boolean) {
+        override fun toString(): String {
+            return "(to: $to, flow: $capacity)"
+        }
+    }
+    private val depth = IntArray(size)
+    private val indices = IntArray(size)
+    private val deque = IntArray(size)
+    private val graph = Array(size){ ArrayList<Edge>() }
+    private  fun bfs() {
+        depth.fill(-1)
+        depth[start] = 0
+        indices.fill(0)
+        var begin = 0
+        var end = 0
+        deque[end++] = start
+        while (begin < end) {
+            val current = deque[begin++]
+            if (depth[current] == depth[goal]) break
+            for (next in graph[current]) {
+                if (!next.capacity) continue
+                if (depth[next.to] != -1) continue
+                depth[next.to] = depth[current] + 1
+                deque[end++] = next.to
+            }
+        }
+    }
+    private fun dfs(): Int {
+        var end = 0
+        deque[end++] = start
+        var result = 0
+        while (true) {
+            while (0 < end) {
+                val last = deque[end - 1]
+                if (last == goal) break
+                while (indices[last] < graph[last].size) {
+                    val e = graph[last][indices[last]++]
+                    if (e.capacity && depth[last] < depth[e.to]) {
+                        deque[end++] = e.to
+                        break
+                    }
+                }
+                if (last == deque[end - 1]) {
+                    --end
+                }
+            }
+            if (end-- == 0) break
+            for (idx in 0 until end) {
+                val i = deque[idx]
+                val e = graph[i][indices[i]]
+                e.capacity = false
+                graph[e.to][e.pair].capacity = true
+            }
+            end = 0
+            result += 1
+        }
+        return result
+    }
+    fun addDirectionalEdge(from: Int, to: Int) {
+        graph[from].add(Edge(to, graph[to].size, true))
+        graph[to].add(Edge(from, graph[from].size - 1, false))
+    }
+    fun addBiDirectionalEdge(from: Int, to: Int) {
+        graph[from].add(Edge(to, graph[to].size, true))
+        graph[to].add(Edge(from, graph[from].size - 1, true))
+    }
+    fun pushFlow(): Int {
+        var flow = 0
+        while (true) {
+            bfs()
+            val inc = dfs()
+            if (inc == 0) break
+            flow += inc
+        }
+        return flow
     }
 }

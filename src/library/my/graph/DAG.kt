@@ -6,7 +6,6 @@ object DAG {
     fun dag(n: Int, graph: List<List<Int>>): IntArray {
         val visit = BooleanArray(n)
         val stack = ArrayDeque<Int>()
-        var count = 0
         val history = mutableListOf<Int>()
         for (start in graph.indices) {
             stack.addLast(start)
@@ -30,7 +29,7 @@ object DAG {
                 reverse[to].add(from)
             }
         }
-        count = 0
+        var count = 0
         val group = IntArray(graph.size){-1}
         for (start in history.reversed()) {
             if (group[start] != -1) continue

@@ -67,6 +67,7 @@ class MinCostMatching(val sourceSide: Int, val sinkSide: Int) {
             }
             if (minDistance[sink] == Long.MAX_VALUE) return result
             for (i in minDistance.indices) {
+                if (minDistance[i] == Long.MAX_VALUE) continue
                 potential[i] += minDistance[i]
             }
             val cost = potential[sink]

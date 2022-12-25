@@ -62,6 +62,7 @@ class RBTree<T>(private val comparator: Comparator<T>): MutableSet<T>, Iterable<
             is Just ->
                 throw IllegalStateException(result.value.toString())
             is None -> Unit
+            else -> throw IllegalStateException("null")
         }
     }
     override fun add(element: T): Boolean {

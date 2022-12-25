@@ -168,7 +168,6 @@ abstract class SegmentTreeI protected constructor(val size: Int, initial: IntArr
             }
         }
     }
-    protected abstract val e: V
     protected abstract fun plus(left: V, right: V): V
     fun get(from: Int, until: Int): V {
         var result = e
@@ -244,6 +243,7 @@ abstract class SegmentTreeI protected constructor(val size: Int, initial: IntArr
         return 0
     }
     companion object {
+        protected val e: Int = TODO()
         fun log2Ceil(value: Int): Int {
             var l = 0
             while (1 shl l < value) {
